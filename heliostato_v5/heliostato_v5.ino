@@ -34,7 +34,7 @@ const bool permitirCombinados = true;
 
 const uint32_t anchoPulsoUs = 20;
 const uint32_t preparacionUs = 3000;
-const uint32_t conexionMaxMs = 2500;
+const uint32_t conexionMaxMs = 15000; // 15 s sin comunicacion de la pestaña de control.
 
 
 
@@ -117,131 +117,85 @@ const char pagina[] PROGMEM = R"HTML(
 <title>Heliostato: manual y preparacion solar</title>
 
 <style>
-*{box-sizing:border-box} [hidden]{display:none!important}
-body{font:16px system-ui,sans-serif;background:#f3f5f4;color:#25352d;max-width:720px;margin:auto;padding:20px}
-header{padding:12px 0}h1{font-size:28px;font-weight:600}h2{font-size:20px;font-weight:600}
-section{background:white;border:1px solid #dbe2dd;border-radius:16px;padding:18px;margin:18px 0}
-p{line-height:1.5}.etiqueta{display:none}button,input,select{font:inherit;padding:11px;border:1px solid #c9d4cd;border-radius:9px;background:white;color:inherit;margin:4px}
-button{cursor:pointer}button:hover:not(:disabled){background:#e1eee5}button:disabled{opacity:.4;cursor:default}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #649379}
-.rojo{background:#f4dcda;color:#80342d}.verde{background:#dcece0}label{display:inline-block;margin:5px 0}input{width:145px;max-width:100%}
-input[type=checkbox]{width:auto}input[type=datetime-local]{width:255px}.dato,#estado,#ayudaControl{font-size:14px}#error{color:#8b4029;min-height:24px}
-.cruceta{display:grid;grid-template-columns:repeat(3,76px);grid-template-rows:repeat(3,65px);gap:8px;justify-content:center}
-.cruceta button{touch-action:none;user-select:none;font-size:32px;margin:0}.arriba{grid-area:1/2}.izquierda{grid-area:2/1}.centro{grid-area:2/2;align-self:center;text-align:center}.derecha{grid-area:2/3}.abajo{grid-area:3/2}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:7px;text-align:right;border-bottom:1px solid #e4e8e5}.tabla{overflow:auto}summary{cursor:pointer;padding:8px 0}.campo{display:block}
+*{box-sizing:border-box}[hidden]{display:none!important}
+:root{font:15px system-ui,sans-serif;color:#263b31;background:#edf2ee}
+body{margin:0}button,input,select{font:inherit;color:inherit;border:1px solid #ced9d1;border-radius:10px;background:#fff;min-height:42px;padding:9px 12px}
+button{cursor:pointer}button:disabled{opacity:.4;cursor:default}button:hover:not(:disabled){background:#e4eee6}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #6b9a7b;outline-offset:2px}
+.app{height:100vh;height:100dvh;max-width:740px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}h1{font-size:21px;font-weight:600;margin:0}h2{font-size:16px;margin:0}p{margin:0;line-height:1.4}
+.acciones{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.rojo{background:#f3d8d4;color:#803b30}.verde{background:#dceade}.primario{background:#285c40;color:white}.primario:hover:not(:disabled){background:#346e4d}
+#estado{font-size:13px;max-height:54px;overflow:auto}#error{font-size:13px;color:#943d2d}#error:empty{display:none}
+section{background:white;border:1px solid #dae3dc;border-radius:16px;padding:12px}.manual{flex:1;min-height:242px;display:flex;flex-direction:column;justify-content:space-between;gap:6px}.cabecera{display:flex;align-items:center;justify-content:space-between;gap:6px}.cabecera button{min-height:36px;padding:5px 10px;font-size:13px}
+.cruceta{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,44px);gap:4px;justify-content:center}.cruceta button{touch-action:none;user-select:none;-webkit-user-select:none;font-size:26px;padding:0;margin:0}.arriba{grid-area:1/2}.izquierda{grid-area:2/1}.centro{grid-area:2/2;align-self:center;text-align:center}.derecha{grid-area:2/3}.abajo{grid-area:3/2}
+.manualContenido{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1fr);gap:8px;align-items:center}.posiciones{display:flex;justify-content:center;gap:10px;font-size:11px;margin-top:4px}.angulos{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end}.angulos label{display:flex;flex-direction:column;font-size:12px;gap:3px}.angulos input{width:100%;min-width:0;height:42px;padding:6px}.angulos button{height:42px;grid-column:1/-1}
+#solarPanel{display:flex;flex-direction:column;gap:7px}.intervalo{font-size:12px;color:#607568}.solarAcciones{display:grid;grid-template-columns:1fr 1fr;gap:6px}#resumenSolar{font-size:12px;max-height:52px;overflow:auto}footer{font-size:11px;text-align:center;color:#607568}
+dialog{width:min(620px,calc(100% - 24px));max-height:90vh;max-height:90dvh;border:1px solid #cdd9d0;border-radius:18px;padding:16px;color:inherit}dialog::backdrop{background:#16251c88}.dialogCabecera{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.dialogCabecera button{min-height:36px;padding:6px 12px}dialog p{font-size:12px;margin:8px 0}dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;margin:8px 0}dialog input,dialog select{width:100%;min-width:0}.campos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.check{flex-direction:row!important;align-items:flex-start}.check input{width:auto;min-height:20px;margin:0}summary{cursor:pointer;padding:10px 0;font-size:14px}details+details{border-top:1px solid #e2e8e3}
+.tabla{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px;text-align:right;border-bottom:1px solid #e2e8e3;white-space:nowrap}
+@media(min-width:650px) and (min-height:720px){.app{max-height:780px;padding:20px;gap:12px}.cruceta{grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,54px)}section{padding:16px}}
+@media(max-height:600px){.app{padding:7px;gap:5px}.manual{min-height:224px;padding:8px}.cruceta{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,40px);gap:2px}.cruceta button{min-height:40px}#solarPanel{padding:8px;gap:5px}#estado{max-height:36px}footer{display:none}}
 </style>
 </head>
 
 <body>
-
-<header>
-<div class="etiqueta">Heliostato · Control de dos motores</div>
-<h1 id="tituloPantalla">Heliostato · v5</h1>
-<p id="subtituloPantalla">Establece el origen manual para acceder al panel.</p>
-</header>
-
-<button class="rojo" onclick="orden('/seguro', true)">
-  Detener
-</button>
-
-<button id="habilitar"
-        class="verde"
-        data-orden
-        disabled
-        onclick="orden('/habilitar')">
-  Habilitar
-</button>
-
-<p id="estado">Conectando...</p>
+<main class="app">
+<header><h1 id="tituloPantalla">Heliostato</h1><span class="intervalo">Control · Solar</span></header>
+<p id="subtituloPantalla" hidden></p><p id="ayudaControl" hidden></p>
+<div class="acciones">
+<button id="origen" data-orden disabled onclick="referenciar()">Registrar cero</button>
+<button id="habilitar" class="verde" data-orden disabled onclick="orden('/habilitar')">Habilitar</button>
+<button class="rojo" onclick="orden('/seguro',true)">Detener</button>
+</div>
+<p id="estado" role="status" aria-live="polite">Conectando…</p>
 <p id="error" role="status" aria-live="polite"></p>
-<p id="ayudaControl">Conectando con el controlador...</p>
-
-<div id="calibracion">
-<p class="paso">Nivela el espejo con el equipo apagado. Enciende y registra el cero.</p>
-<section>
-  <h2>Referencia</h2>
-
-  <p>
-    Coloca el espejo nivelado en la referencia fisica de ambos motores.
-    Este boton asigna cero a ambos ejes; no mueve los motores.
-  </p>
-
-  <button id="origen"
-          data-orden
-          disabled
-          onclick="referenciar()">
-    Establecer origen de ambos ejes
-  </button>
-
-  <p>
-    Se aplicaran limites de -750 a +750 pasos.
-    Los drivers quedaran habilitados para conservar torque.
-  </p>
+<section class="manual">
+<div class="cabecera"><h2>Movimiento manual</h2><button id="homeAmbos" data-orden disabled onclick="orden('/home-ambos')">Volver a cero</button></div>
+<div class="manualContenido"><div id="ejes"></div>
+<div class="angulos">
+<label>Motor 1 · °<input id="grado1" type="number" min="-30" max="30" step="0.1" value="0"></label>
+<label>Motor 2 · °<input id="grado2" type="number" min="-30" max="30" step="0.1" value="0"></label>
+<button id="posicionar" data-orden disabled onclick="enviarPosicionAngular()">Ir</button>
+</div>
+</div>
 </section>
-
-<div id="controlesCalibracion">
-<div id="controles">
-<section>
-  <h2>Posicion absoluta del espejo</h2>
-  <label>Motor 1 (grados)<input id="grado1" type="number" min="-30" max="30" step="0.1" value="0"></label>
-  <label>Motor 2 (grados)<input id="grado2" type="number" min="-30" max="30" step="0.1" value="0"></label>
-  <p><button id="posicionar" data-orden disabled onclick="enviarPosicionAngular()">Ir a la posicion</button></p>
-  <p>Destino desde el origen: primero motor 1 y luego motor 2.
-  Conversion media experimental. Angulos negativos estimados por simetria.
-  La posicion real no se mide automaticamente.</p>
-</section>
-<h2>Movimiento manual</h2>
-
-
-<section><p>Velocidad fija: 10 pasos/s</p>
-<button id="homeAmbos" data-orden disabled onclick="orden('/home-ambos')">Origen</button></section>
-<div id="ejes"></div>
-</div>
-</div>
-
-
-</div>
 <section id="solarPanel">
-  <h2>Seguimiento solar</h2>
-  <p>Prueba de 60 minutos, con ajustes cada 5 minutos. Configura el lugar y el receptor, revisa la tabla y activa el seguimiento.</p>
-  <label class="campo">Inicio <select id="tipoInicio"><option value="ahora">Al activar</option><option value="fecha">Fecha y hora</option></select></label>
-  <label class="campo" id="campoFecha" hidden>Fecha y hora del dispositivo <input id="fechaSolar" type="datetime-local" step="60"></label>
-  <p id="zonaSolar" class="dato"></p>
-  <label>Duración (min) <input id="duracionSolar" type="number" min="5" max="180" step="5" value="60"></label>
-  <details>
-    <summary>Lugar y receptor</summary>
-    <p>Azimut desde el norte verdadero: norte 0°, este 90°, sur 180°, oeste 270°. Si usas brújula magnética, corrige la declinación local antes de introducir el rumbo.</p>
-    <label>Latitud <input id="latSolar" type="number" min="-89" max="89" step="any" value="-39.82"></label>
-    <label>Longitud <input id="lonSolar" type="number" min="-180" max="180" step="any" value="-73.24"></label>
-    <p class="dato">Coordenadas aproximadas de Valdivia: reemplázalas por las del lugar de la prueba.</p>
-    <label>Rumbo del frente (°) <input id="rumboSolar" type="number" min="0" max="359.99" step="any" value="270"></label>
-    <p class="dato">Frente: dirección desde el espejo hacia quien toma la foto frontal; en tu instalación apuntará al receptor. Derecha e izquierda se interpretan como se ven en esa foto.</p>
-    <label>Azimut al receptor (°) <input id="azObjetivo" type="number" min="0" max="359.99" step="any" value="270"></label>
-    <label>Distancia horizontal (m) <input id="distObjetivo" type="number" min="0.1" max="10000" step="any" value="6"></label>
-    <label>Diferencia de altura (m) <input id="alturaObjetivo" type="number" min="-1000" max="1000" step="any" placeholder="Por medir" required></label>
-    <p class="dato">Altura del punto de luz menos altura del centro del espejo. Positiva si el receptor está más alto. No es la altura del edificio.</p>
-  </details>
-  <details>
-    <summary>Ejes y calibración</summary>
-    <p>Referencia: espejo horizontal. Motor 1 positivo baja el borde derecho; motor 2 positivo baja el borde trasero, vistos desde el frente.</p>
-    <label>Motor 1 positivo <select id="signo1"><option value="1">Baja derecha</option><option value="-1">Baja izquierda</option></select></label>
-    <label>Motor 2 positivo <select id="signo2"><option value="1">Baja trasera</option><option value="-1">Baja delantera</option></select></label>
-    <p class="dato">Modelo provisional: inclinaciones de las secciones derecha–izquierda y frente–atrás de un plano (pendientes independientes). La tabla original se mantiene, con el sentido opuesto estimado por simetría. Comprueba el modelo con ambos ejes inclinados antes de usarlo para apuntar.</p>
-    <label class="campo"><input id="calibracionSolar" type="checkbox"> Comprobé el origen, los sentidos y las inclinaciones combinadas del modelo.</label>
-  </details>
-  <p><button onclick="previsualizarSolar()">Revisar recorrido</button> <button id="iniciarSolar" data-orden disabled onclick="activarSolar()">Activar seguimiento</button></p>
-  <p id="resumenSolar" role="status" aria-live="polite">Falta medir la diferencia de altura y verificar la orientación.</p>
-  <div class="tabla"><table id="tablaSolar" hidden><thead><tr><th>Hora</th><th>Sol az.</th><th>Sol elev.</th><th>Normal az.</th><th>Normal elev.</th><th>M1</th><th>M2</th><th>Estado</th></tr></thead><tbody id="filasSolar"></tbody></table></div>
-  <p class="dato">Normal: dirección perpendicular a la superficie del espejo; en el origen su elevación es 90°. Los valores de la tabla son teóricos, no mediciones.</p>
-  <p class="dato">Mantén esta página abierta, el dispositivo despierto y conectado al ESP32. Sin comunicación se cancela la prueba. Detener cancela el seguimiento; al terminar se conserva la última posición, sin volver automáticamente al origen.</p>
+<div class="cabecera"><h2>Seguimiento solar</h2><button onclick="document.getElementById('configSolar').showModal()">Configurar</button></div>
+<p id="periodoVisible" class="intervalo">60 min · Ajustes cada 5 min</p>
+<div class="solarAcciones"><button onclick="previsualizarSolar()">Ver recorrido</button><button id="iniciarSolar" class="primario" data-orden disabled onclick="activarSolar()">Activar</button></div>
+<p id="resumenSolar" role="status" aria-live="polite">Configura el receptor antes de activar.</p>
+<dialog id="configSolar">
+<div class="dialogCabecera"><h2>Configurar seguimiento</h2><button onclick="document.getElementById('configSolar').close()">Listo</button></div>
+<div class="campos">
+<label>Inicio<select id="tipoInicio"><option value="ahora">Al activar</option><option value="fecha">Fecha y hora</option></select></label>
+<label>Duración · min<input id="duracionSolar" type="number" min="5" max="180" step="5" value="60"></label>
+</div>
+<label id="campoFecha" hidden>Fecha y hora del dispositivo<input id="fechaSolar" type="datetime-local" step="60"></label>
+<p id="zonaSolar"></p>
+<details open><summary>Receptor y orientación</summary>
+<div class="campos">
+<label>Frente · azimut °<input id="rumboSolar" type="number" min="0" max="359.99" step="any" value="270"></label>
+<label>Receptor · azimut °<input id="azObjetivo" type="number" min="0" max="359.99" step="any" value="270"></label>
+<label>Distancia horizontal · m<input id="distObjetivo" type="number" min="0.1" max="10000" step="any" value="6"></label>
+<label>Diferencia de altura · m<input id="alturaObjetivo" type="number" min="-1000" max="1000" step="any" placeholder="Por medir" required></label>
+</div>
+<p>Altura del receptor menos altura del espejo. Azimut verdadero: N 0°, E 90°, S 180°, O 270°. Frente: hacia quien toma la foto.</p>
+</details>
+<details><summary>Ubicación</summary><div class="campos">
+<label>Latitud<input id="latSolar" type="number" min="-89" max="89" step="any" value="-39.82"></label>
+<label>Longitud<input id="lonSolar" type="number" min="-180" max="180" step="any" value="-73.24"></label>
+</div><p>Valdivia aproximada; ajusta al lugar de la prueba.</p></details>
+<details><summary>Ejes y calibración</summary><div class="campos">
+<label>Motor 1 positivo<select id="signo1"><option value="1">Baja derecha</option><option value="-1">Baja izquierda</option></select></label>
+<label>Motor 2 positivo<select id="signo2"><option value="1">Baja trasera</option><option value="-1">Baja delantera</option></select></label>
+</div><p>Visto desde la foto frontal. Modelo de pendientes independientes; verifica la inclinación combinada. Sentido opuesto estimado por simetría.</p>
+<label class="check"><input id="calibracionSolar" type="checkbox">Comprobé el origen, los sentidos y las inclinaciones combinadas.</label>
+</details>
+</dialog>
+<dialog id="recorridoSolar"><div class="dialogCabecera"><h2>Recorrido previsto</h2><button onclick="document.getElementById('recorridoSolar').close()">Cerrar</button></div>
+<p>Horario de Valdivia · normal = perpendicular al espejo · valores teóricos.</p>
+<div class="tabla"><table id="tablaSolar" hidden><thead><tr><th>Hora</th><th>Sol az.</th><th>Sol elev.</th><th>Normal az.</th><th>Normal elev.</th><th>M1</th><th>M2</th><th>Estado</th></tr></thead><tbody id="filasSolar"></tbody></table></div>
+</dialog>
 </section>
-
-<main id="panel">
-
-
-
-<div id="controlesPanel"></div>
-
+<footer>Mantén esta pestaña abierta y la pantalla encendida.</footer>
 </main>
 <script>
 const sesionPagina = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -261,8 +215,7 @@ document.getElementById('ejes').innerHTML = `
 <span class="centro">·</span>
 <button class="derecha" data-mover disabled onpointerdown="comenzarJog(event,0,1)" onpointerup="soltarJog()" onpointercancel="soltarJog()" onlostpointercapture="soltarJog()" aria-label="Motor 1 positivo: baja el borde derecho">→</button>
 <button class="abajo" data-mover disabled onpointerdown="comenzarJog(event,1,-1)" onpointerup="soltarJog()" onpointercancel="soltarJog()" onlostpointercapture="soltarJog()" aria-label="Motor 2 negativo: baja el borde delantero">↓</button>
-</div><p>Mantén una flecha presionada para bajar ese borde, visto desde el frente. Suelta para detener.</p>
-<p id="dato0">Motor 1: pendiente</p><p id="dato1">Motor 2: pendiente</p>`;
+</div><div class="posiciones"><span id="dato0">M1: —</span><span id="dato1">M2: —</span></div>`;
 
 function pintarBotones() {
   document.querySelectorAll('[data-mover]').forEach(b => { b.disabled = true; });
@@ -282,7 +235,7 @@ function pintarBotones() {
     : e.seguro ? 'Origen registrado. Pulsa Habilitar movimiento.'
     : e.moviendo ? 'Movimiento en curso. Puedes detenerlo con Detener.'
     : 'Listo: usa las flechas o introduce ambos angulos y pulsa Ir a la posicion.';
-  document.getElementById('tituloPantalla').textContent = 'Heliostato · v5';
+  document.getElementById('tituloPantalla').textContent = 'Heliostato';
   document.getElementById('subtituloPantalla').textContent = 'Movimiento manual y destinos absolutos por angulos.';
 
 
@@ -316,7 +269,7 @@ async function peticion(url, opciones = {}) {
 
   const temporizador = setTimeout(() => {
     controlador.abort();
-  }, 1800);
+  }, 5000); // Espera HTTP: 5 s; independiente de la parada a los 15 s.
 
   try {
     const respuesta = await fetch(url, {
@@ -374,7 +327,7 @@ async function consultarEstado() {
       const maximo = x.max === null ? 'pendiente' : x.max;
 
       document.getElementById('dato' + eje).textContent =
-        `Posicion: ${x.pos} | Minimo: ${minimo} | Maximo: ${maximo}`;
+        `M${eje+1}: ${x.pos} pasos`;
     });
 
   } catch (error) {
@@ -583,18 +536,18 @@ function mostrarPlanSolar(plan) {
   const invalidos=plan.puntos.filter(p=>p.error).length;
   document.getElementById('resumenSolar').textContent=invalidos
     ? 'No se puede ejecutar: '+invalidos+' posiciones no válidas. Cambia el horario o la geometría; no se recortan ángulos.'
-    : plan.puntos.length+' posiciones. Inicio de movimientos: '+horaSolar(plan.inicio)+', último ajuste: '+horaSolar(plan.puntos.at(-1).epoch)+'. Horario de Valdivia. La llegada a cada destino tarda lo que demoren los motores.';
+    : plan.puntos.length+' posiciones · '+horaSolar(plan.inicio)+'–'+horaSolar(plan.puntos.at(-1).epoch)+' · Valdivia';
   return !invalidos;
 }
 function previsualizarSolar() {
-  try {mostrarPlanSolar(prepararPlanSolar());}
+  try {mostrarPlanSolar(prepararPlanSolar());document.getElementById('recorridoSolar').showModal();}
   catch(e) {document.getElementById('resumenSolar').textContent=e.message;document.getElementById('tablaSolar').hidden=true;}
 }
 async function activarSolar() {
   if (ocupado || pulsacion || liberando || !conectado || !estado || estado.seguro || estado.moviendo || estado.solar || !estado.origen) return;
   try {
     const plan=prepararPlanSolar();
-    if (!mostrarPlanSolar(plan)) return;
+    if (!mostrarPlanSolar(plan)) {document.getElementById('recorridoSolar').showModal();return;}
     if (!document.getElementById('calibracionSolar').checked) throw Error('Primero comprueba y confirma la calibración de ambos ejes en Ejes y calibración.');
     const cuerpo=new URLSearchParams({n:String(plan.puntos.length),delay:String(Math.round(plan.inicio-Date.now()))});
     plan.puntos.forEach((p,i)=>{cuerpo.set('p'+i+'_0',p.g1.toFixed(6));cuerpo.set('p'+i+'_1',p.g2.toFixed(6));});
@@ -615,6 +568,7 @@ document.getElementById('tipoInicio').addEventListener('change',()=>{
 });
 document.getElementById('zonaSolar').textContent='La fecha ingresada usa la zona del dispositivo: '+Intl.DateTimeFormat().resolvedOptions().timeZone+'. La tabla se muestra en America/Santiago. Verifica el reloj antes de activar.';
 document.getElementById('solarPanel').addEventListener('input',()=>{
+  document.getElementById('periodoVisible').textContent=document.getElementById('duracionSolar').value+' min · Ajustes cada 5 min';
   document.getElementById('tablaSolar').hidden=true;
   document.getElementById('resumenSolar').textContent='Datos modificados. Revisa nuevamente el recorrido antes de activar.';
 });
