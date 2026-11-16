@@ -5,14 +5,16 @@ Abre `heliostato_v5/heliostato_v5.ino` en Arduino IDE. La carpeta y el archivo d
 ## Uso
 
 1. Nivela físicamente el espejo y establece el origen. Pulsa Habilitar.
-2. En Seguimiento solar, abre Lugar y receptor y completa la configuración.
+2. En Seguimiento solar, pulsa Configurar y completa Receptor y orientación. Ubicación y Ejes y calibración están en desplegables. Pulsa Listo para cerrar la configuración.
 3. Revisa Ejes y calibración. Confirma los sentidos y el modelo de inclinaciones combinadas cuando los hayas comprobado físicamente.
 4. Selecciona inicio al activar o una fecha y hora dentro de las próximas 24 horas. La fecha ingresada utiliza la zona horaria del teléfono/computador, indicada en pantalla. La tabla se muestra en America/Santiago. El reloj del dispositivo debe ser correcto.
 5. La duración inicial es de 60 minutos. Puede configurarse de 5 a 180 minutos, en múltiplos de cinco. El intervalo siempre es de cinco minutos.
-6. Pulsa Revisar recorrido. Si cualquier punto queda fuera del rango, no se permite ejecutar el plan; no se recortan los ángulos para forzarlo a caber.
-7. Pulsa Activar seguimiento. La opción Al activar deja diez segundos para transferir el plan. Para una hora hay 13 posiciones: minutos 0, 5, 10…60.
+6. Pulsa Ver recorrido para abrir la tabla en una ventana aparte. Si cualquier punto queda fuera del rango, no se permite ejecutar el plan; no se recortan los ángulos para forzarlo a caber.
+7. Pulsa Activar. La opción Al activar deja diez segundos para transferir el plan. Para una hora hay 13 posiciones: minutos 0, 5, 10…60.
 8. Mantén la página de control abierta, el dispositivo despierto y conectado a la red del ESP32. El plan se ejecuta en el ESP32 con un reloj monotónico, pero conserva la parada por falta de comunicación del código original. No es seguimiento desatendido.
 9. Detener cancela el plan y conserva el torque. Habilitar no reanuda una prueba cancelada: hay que programarla de nuevo. Al concluir se conserva la última posición; no se vuelve automáticamente al origen.
+
+El plazo por falta de comunicación es de **15 segundos** (`conexionMaxMs = 15000`). Se renueva automáticamente con las consultas de la página: no exige tocar botones. Cada petición HTTP espera hasta 5 segundos. El control de flechas conserva su caducidad independiente de 450 ms al perder confirmaciones. El panel principal es compacto y adaptable; la configuración y el recorrido se abren aparte, con desplazamiento interior si hace falta.
 
 Las horas de la tabla indican cuándo se inicia cada ajuste, no cuándo termina. Se conserva la velocidad de 10 pulsos/s y el movimiento secuencial de ambos motores. La primera colocación puede demorar más de un minuto. El último ajuste se inicia en el minuto 60 y el programa declara la prueba terminada cuando ese movimiento concluye. Durante el desplazamiento y entre ajustes existe error de apuntado. No se ha implementado una precolocación antes del inicio del periodo.
 
